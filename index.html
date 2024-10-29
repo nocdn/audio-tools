@@ -1,261 +1,287 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Audio tools</title>
-  </head>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Audio tools</title>
+    </head>
 
-  <style>
-    @import url("https://fonts.cdnfonts.com/css/sf-pro-display");
-    body {
-      font-family: "SF Mono", monospace;
-      text-align: center;
-      margin-top: 50px;
-      background-color: #f5f5f5;
-    }
-    .drop-zone {
-      width: 100%;
-      max-width: 600px;
-      height: 200px;
-      padding: 25px;
-      margin: 0 auto;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-direction: column;
-      background-color: white;
-      border: 2px dashed #ccc;
-      border-radius: 10px;
-      position: relative;
-      transition: border-color 0.3s ease;
-      cursor: pointer;
-    }
+    <style>
+        @import url("https://fonts.cdnfonts.com/css/sf-pro-display");
+        body {
+            font-family: "SF Mono", monospace;
+            text-align: center;
+            margin-top: 50px;
+            background-color: #f5f5f5;
+        }
+        .drop-zone {
+            width: 100%;
+            max-width: 600px;
+            height: 200px;
+            padding: 25px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            background-color: white;
+            border: 2px dashed #ccc;
+            border-radius: 10px;
+            position: relative;
+            transition: border-color 0.3s ease;
+            cursor: pointer;
+        }
 
-    .drop-zone.dragover {
-      border-color: #2196f3;
-      background-color: rgba(33, 150, 243, 0.05);
-    }
+        .drop-zone.dragover {
+            border-color: #2196f3;
+            background-color: rgba(33, 150, 243, 0.05);
+        }
 
-    .drop-zone:hover {
-      border: 2px dashed light;
-    }
+        .drop-zone:hover {
+            border: 2px dashed light;
+        }
 
-    .drop-zone__prompt {
-      font-size: 1.2em;
-      color: #666;
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-      align-items: center;
-      margin-bottom: 1.5rem;
-    }
+        .drop-zone__prompt {
+            font-size: 1.2em;
+            color: #666;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
 
-    .drop-zone__input {
-      display: none;
-    }
+        .drop-zone__input {
+            display: none;
+        }
 
-    .file-info {
-      font-size: 0.9em;
-      color: #888;
-      margin-top: 10px;
+        .file-info {
+            font-size: 0.9em;
+            color: #888;
+            margin-top: 10px;
 
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-    }
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
 
-    .format-chip-container {
-      display: flex;
-      gap: 0.25rem;
-    }
+        .format-chip-container {
+            display: flex;
+            gap: 0.25rem;
+        }
 
-    .format-chip {
-      padding: 0.25rem 0.5rem;
-      border-radius: 0.25rem;
-      background-color: #eee;
-      color: #666;
-      font-size: 0.8rem;
-    }
+        .format-chip {
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #eee;
+            color: #666;
+            font-size: 0.8rem;
+        }
 
-    .svg-upload {
-      outline: 2px dashed #ccc;
-      border-radius: 50%;
-      padding: 0.5rem;
-    }
+        .svg-upload {
+            outline: 2px dashed #ccc;
+            border-radius: 50%;
+            padding: 0.5rem;
+        }
 
-    .reverb-sliders {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 1rem;
-      max-width: 800px;
-      margin: 2rem auto;
-    }
+        .reverb-sliders {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            max-width: 800px;
+            margin: 2rem auto;
+        }
 
-    .reverb-slider-container {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-    }
+        .reverb-slider-container {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
 
-    .reverb-slider-label {
-      flex: 1;
-      text-align: right;
-    }
+        .reverb-slider-label {
+            flex: 1;
+            text-align: right;
+        }
 
-    .slider {
-      flex: 3;
-    }
-  </style>
-  <body>
-    <div class="drop-zone">
-      <div class="drop-zone__prompt">
-        <svg
-          class="svg-upload"
-          width="30"
-          height="30"
-          viewBox="0 0 24 24"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            d="M11 14.9861C11 15.5384 11.4477 15.9861 12 15.9861C12.5523 15.9861 13 15.5384 13 14.9861V7.82831L16.2428 11.0711L17.657 9.65685L12.0001 4L6.34326 9.65685L7.75748 11.0711L11 7.82854V14.9861Z"
-            fill="#5046E5"
-          />
-          <path
-            d="M4 14H6V18H18V14H20V18C20 19.1046 19.1046 20 18 20H6C4.89543 20 4 19.1046 4 18V14Z"
-            fill="#5046E5"
-          />
-        </svg>
-      </div>
-      <input
-        type="file"
-        name="file"
-        id="fileInput"
-        class="drop-zone__input"
-        accept=".mp3,.mp4,.mpeg,.mpga,.m4a,.wav,.webm"
-      />
-      <div class="file-info">
-        <div>Drag a file here to process</div>
-        <div class="file-size-message">Max file size: 25MB</div>
-        <br />
-        <div class="format-chip-container">
-          <div class="format-chip">mp3</div>
-          <div class="format-chip">mp4</div>
-          <div class="format-chip">mpeg</div>
-          <div class="format-chip">mpga</div>
-          <div class="format-chip">m4a</div>
-          <div class="format-chip">wav</div>
-          <div class="format-chip">webm</div>
+        .slider {
+            flex: 3;
+        }
+
+        #process-button {
+            border: 2px dashed #a2d3a0;
+            font-size: 15px;
+            background-color: #ecf7ed;
+            width: 8rem;
+            height: 2.5rem;
+            border-radius: 15px;
+            margin: 2rem auto;
+            cursor: pointer;
+            color: #133d19;
+            font-family: "SF Mono", monospace;
+        }
+    </style>
+    <body>
+        <div class="drop-zone">
+            <div class="drop-zone__prompt">
+                <svg
+                    class="svg-upload"
+                    width="30"
+                    height="30"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                >
+                    <path
+                        d="M11 14.9861C11 15.5384 11.4477 15.9861 12 15.9861C12.5523 15.9861 13 15.5384 13 14.9861V7.82831L16.2428 11.0711L17.657 9.65685L12.0001 4L6.34326 9.65685L7.75748 11.0711L11 7.82854V14.9861Z"
+                        fill="#5046E5"
+                    />
+                    <path
+                        d="M4 14H6V18H18V14H20V18C20 19.1046 19.1046 20 18 20H6C4.89543 20 4 19.1046 4 18V14Z"
+                        fill="#5046E5"
+                    />
+                </svg>
+            </div>
+            <input
+                type="file"
+                name="file"
+                id="fileInput"
+                class="drop-zone__input"
+                accept=".mp3,.mp4,.mpeg,.mpga,.m4a,.wav,.webm"
+            />
+            <div class="file-info">
+                <div>Drag a file here to process</div>
+                <div class="file-size-message">Max file size: 25MB</div>
+                <br />
+                <div class="format-chip-container">
+                    <div class="format-chip">mp3</div>
+                    <div class="format-chip">mp4</div>
+                    <div class="format-chip">mpeg</div>
+                    <div class="format-chip">mpga</div>
+                    <div class="format-chip">m4a</div>
+                    <div class="format-chip">wav</div>
+                    <div class="format-chip">webm</div>
+                </div>
+            </div>
         </div>
-      </div>
-    </div>
 
-    <div class="reverb-sliders">
-      <div class="reverb-slider-container">
-        <div class="reverb-slider-label">Room Size</div>
-        <input
-          type="range"
-          min="0"
-          max="100"
-          value="50"
-          class="room-size slider"
-        />
-      </div>
-      <div class="reverb-slider-container">
-        <div class="reverb-slider-label">Damping</div>
-        <input
-          type="range"
-          min="0"
-          max="100"
-          value="50"
-          class="damping slider"
-        />
-      </div>
-      <div class="reverb-slider-container">
-        <div class="reverb-slider-label">Dry Level</div>
-        <input
-          type="range"
-          min="0"
-          max="100"
-          value="50"
-          class="dry-level slider"
-        />
-      </div>
-      <div class="reverb-slider-container">
-        <div class="reverb-slider-label">Wet Level</div>
-        <input
-          type="range"
-          min="0"
-          max="100"
-          value="50"
-          class="wet-level slider"
-        />
-      </div>
-      <div class="reverb-slider-container">
-        <div class="reverb-slider-label">Width</div>
-        <input
-          type="range"
-          min="0"
-          max="100"
-          value="100"
-          class="width slider"
-        />
-      </div>
-      <div class="reverb-slider-container">
-        <div class="reverb-slider-label">Freeze</div>
-        <input type="range" min="0" max="100" value="0" class="freeze slider" />
-      </div>
-      <div class="reverb-slider-container">
-        <div class="reverb-slider-label">Delay</div>
-        <input type="range" min="0" max="100" value="0" class="delay slider" />
-      </div>
-    </div>
-    <script>
-      document.querySelectorAll(".drop-zone").forEach((dropZone) => {
-        const input = dropZone.querySelector(".drop-zone__input");
+        <div class="reverb-sliders">
+            <div class="reverb-slider-container">
+                <div class="reverb-slider-label">Room Size</div>
+                <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    value="50"
+                    class="room-size slider"
+                />
+            </div>
+            <div class="reverb-slider-container">
+                <div class="reverb-slider-label">Damping</div>
+                <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    value="50"
+                    class="damping slider"
+                />
+            </div>
+            <div class="reverb-slider-container">
+                <div class="reverb-slider-label">Dry Level</div>
+                <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    value="50"
+                    class="dry-level slider"
+                />
+            </div>
+            <div class="reverb-slider-container">
+                <div class="reverb-slider-label">Wet Level</div>
+                <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    value="50"
+                    class="wet-level slider"
+                />
+            </div>
+            <div class="reverb-slider-container">
+                <div class="reverb-slider-label">Width</div>
+                <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    value="100"
+                    class="width slider"
+                />
+            </div>
+            <div class="reverb-slider-container">
+                <div class="reverb-slider-label">Freeze</div>
+                <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    value="0"
+                    class="freeze slider"
+                />
+            </div>
+            <div class="reverb-slider-container">
+                <div class="reverb-slider-label">Delay</div>
+                <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    value="0"
+                    class="delay slider"
+                />
+            </div>
+        </div>
+        <button id="process-button">Process</button>
+        <script>
+            document.querySelectorAll(".drop-zone").forEach((dropZone) => {
+                const input = dropZone.querySelector(".drop-zone__input");
 
-        dropZone.addEventListener("click", (e) => {
-          input.click();
-        });
+                dropZone.addEventListener("click", (e) => {
+                    input.click();
+                });
 
-        input.addEventListener("change", (e) => {
-          if (input.files.length) {
-            updateDropZone(dropZone, input.files[0]);
-          }
-        });
+                input.addEventListener("change", (e) => {
+                    if (input.files.length) {
+                        updateDropZone(dropZone, input.files[0]);
+                    }
+                });
 
-        dropZone.addEventListener("dragover", (e) => {
-          e.preventDefault();
-          dropZone.classList.add("dragover");
-        });
+                dropZone.addEventListener("dragover", (e) => {
+                    e.preventDefault();
+                    dropZone.classList.add("dragover");
+                });
 
-        ["dragleave", "dragend"].forEach((type) => {
-          dropZone.addEventListener(type, (e) => {
-            dropZone.classList.remove("dragover");
-          });
-        });
+                ["dragleave", "dragend"].forEach((type) => {
+                    dropZone.addEventListener(type, (e) => {
+                        dropZone.classList.remove("dragover");
+                    });
+                });
 
-        dropZone.addEventListener("drop", (e) => {
-          e.preventDefault();
-          dropZone.classList.remove("dragover");
+                dropZone.addEventListener("drop", (e) => {
+                    e.preventDefault();
+                    dropZone.classList.remove("dragover");
 
-          if (e.dataTransfer.files.length) {
-            input.files = e.dataTransfer.files;
-            updateDropZone(dropZone, e.dataTransfer.files[0]);
-          }
-        });
-      });
+                    if (e.dataTransfer.files.length) {
+                        input.files = e.dataTransfer.files;
+                        updateDropZone(dropZone, e.dataTransfer.files[0]);
+                    }
+                });
+            });
 
-      function updateDropZone(dropZone, file) {
-        let prompt = dropZone.querySelector(".drop-zone__prompt");
-        prompt.textContent = `Selected file: ${file.name}`;
-        document.querySelector(".file-size-message").innerText = `${(
-          file.size /
-          1024 /
-          1024
-        ).toFixed(2)}MB / 25MB`;
-      }
-    </script>
-  </body>
+            function updateDropZone(dropZone, file) {
+                let prompt = dropZone.querySelector(".drop-zone__prompt");
+                prompt.textContent = `Selected file: ${file.name}`;
+                document.querySelector(".file-size-message").innerText = `${(
+                    file.size /
+                    1024 /
+                    1024
+                ).toFixed(2)}MB / 25MB`;
+            }
+        </script>
+    </body>
 </html>
