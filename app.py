@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify, send_from_directory
 import os
 import subprocess
 import logging
+from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 
@@ -77,11 +78,28 @@ def upload_file():
     
     try:
         subprocess.run(sox_command, shell=True, check=True, stderr=subprocess.PIPE)
+        
+        # store full paths for cleanup
+        original_file = os.path.join(UPLOAD_FOLDER, filename)
+        processed_file = os.path.join(UPLOAD_FOLDER, f"reverb_{filename}")
+        
+        try:
+            return send_from_directory(UPLOAD_FOLDER, f'reverb_{filename}', as_attachment=True)
+        finally:
+            # clean up both files
+            try:
+                if os.path.exists(original_file):
+                    os.remove(original_file)
+                    logging.info(f"Deleted original file: {original_file}")
+                if os.path.exists(processed_file):
+                    os.remove(processed_file)
+                    logging.info(f"Deleted processed file: {processed_file}")
+            except Exception as e:
+                logging.error(f"Error during file cleanup: {str(e)}")
+                
     except subprocess.CalledProcessError as e:
         logging.error(f'Sox command failed: {e.stderr.decode()}')
         return jsonify({'error': 'Audio processing failed'}), 500
-
-    return send_from_directory(UPLOAD_FOLDER, f'reverb_{filename}', as_attachment=True)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=7005)
