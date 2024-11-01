@@ -116,6 +116,7 @@
     #process-button {
       border: 2px dashed #a2d3a0;
       font-size: 15px;
+      font-weight: 500;
       background-color: #ecf7ed;
       width: 8rem;
       height: 2.5rem;
@@ -139,6 +140,24 @@
       background-color: #f5f5f5;
       padding: 5px 8px;
       border-radius: 5px;
+    }
+
+    #process-button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .upload-spinner {
+      animation: rotate 0.5s linear infinite;
+      margin: 0;
+      padding: 0;
+    }
+
+    @keyframes rotate {
+      100% {
+        transform: rotate(360deg);
+      }
     }
   </style>
   <body>
@@ -351,7 +370,7 @@
           try {
             const button = document.getElementById("process-button");
             button.disabled = true;
-            button.innerText = "Processing...";
+            addSpinner();
 
             const response = await fetch("/api/upload", {
               method: "POST",
@@ -371,15 +390,70 @@
             a.download = `reverb_${file.name}`;
             document.body.appendChild(a);
             a.click();
+            addCheckmark();
+            setTimeout(() => {
+              removeCheckmark();
+            }, 2000);
             window.URL.revokeObjectURL(url);
             document.body.removeChild(a);
           } catch (error) {
             alert(error.message);
-          } finally {
-            button.disabled = false;
-            button.innerText = "Process";
           }
         });
+
+      function addCheckmark() {
+        document.getElementById("process-button").innerHTML = `
+                <svg
+                  style="display: block"
+                  width="22"
+                  height="22"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M10.2426 16.3137L6 12.071L7.41421 10.6568L10.2426 13.4853L15.8995 7.8284L17.3137 9.24262L10.2426 16.3137Z"
+                    fill="#5B9A63"
+                  />
+                  <path
+                    fill-rule="evenodd"
+                    clip-rule="evenodd"
+                    d="M1 12C1 5.92487 5.92487 1 12 1C18.0751 1 23 5.92487 23 12C23 18.0751 18.0751 23 12 23C5.92487 23 1 18.0751 1 12ZM12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12C21 16.9706 16.9706 21 12 21Z"
+                    fill="#5B9A63"
+                  />
+                </svg>
+              `;
+      }
+
+      function removeCheckmark() {
+        document.getElementById("process-button").innerHTML = "Process";
+      }
+
+      function addSpinner() {
+        document.getElementById("process-button").innerHTML = `
+                <svg
+                  style="display: block"
+                  class="upload-spinner"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+              >
+                  <path
+                      opacity="0.2"
+                      fill-rule="evenodd"
+                      clip-rule="evenodd"
+                      d="M12 19C15.866 19 19 15.866 19 12C19 8.13401 15.866 5 12 5C8.13401 5 5 8.13401 5 12C5 15.866 8.13401 19 12 19ZM12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z"
+                      fill="currentColor"
+                  />
+                  <path
+                      d="M2 12C2 6.47715 6.47715 2 12 2V5C8.13401 5 5 8.13401 5 12H2Z"
+                      fill="currentColor"
+                  />
+              </svg>
+              `;
+      }
     </script>
   </body>
 </html>
