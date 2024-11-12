@@ -159,6 +159,28 @@
         transform: rotate(360deg);
       }
     }
+
+    /* for the mobile viewport */
+
+    @media (max-width: 600px) {
+      .drop-zone {
+        width: 50%;
+      }
+
+      .file-info-drag {
+        display: none;
+      }
+      .format-chip-container {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+
+      .reverb-sliders {
+        grid-template-columns: 1fr;
+        padding: 0 1.5rem;
+      }
+    }
   </style>
   <body>
     <div class="drop-zone">
@@ -189,7 +211,7 @@
         accept=".mp3,.mp4,.mpeg,.mpga,.m4a,.wav,.webm"
       />
       <div class="file-info">
-        <div>Drag a file here to process</div>
+        <div class="file-info-drag">Drag a file here to process</div>
         <div class="file-size-message">Max file size: 25MB</div>
         <br />
         <div class="format-chip-container">
@@ -453,6 +475,10 @@
                   />
               </svg>
               `;
+      }
+
+      function removeSpinner() {
+        document.getElementById("process-button").innerHTML = "Process";
       }
     </script>
   </body>
