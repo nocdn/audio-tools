@@ -448,6 +448,7 @@
             window.URL.revokeObjectURL(url);
             document.body.removeChild(a);
           } catch (error) {
+            removeCheckmark();
             alert(error.message);
           }
         });
