@@ -2,39 +2,71 @@ import { useState } from "react";
 import DropZone from "./DropZone";
 import SubmitButton from "./SubmitButton";
 import Settings from "./Settings";
-import NumberFlow from "@number-flow/react";
+import NumberFlow, { continuous } from "@number-flow/react";
 
 import { Cog } from "lucide-react";
 
-// each setting has a name and numeric value
-type NamedSetting = { name: string; value: number; readableName: string };
+// each setting has a name, displayed label, and numeric value
+type NamedSetting = { name: string; readableName: string; value: number };
+
+// util – how much to change each parameter when +/- is clicked
+const STEP_SIZES: Record<string, number> = {
+  // bass
+  gain: 1,
+  frequency: 5,
+  width: 0.1,
+  // reverb
+  wetGain: 1,
+  reverberance: 5,
+  hfDamping: 5,
+  roomScale: 5,
+  stereoDepth: 5,
+  preDelay: 5,
+};
 
 export default function App() {
   const [file, setFile] = useState<File | null>(null);
   const [settingsOpen, setSettingsOpen] = useState<boolean>(false);
 
-  // sox settings arrays to use map
   const [soxSettings, setSoxSettings] = useState<{
     bass: NamedSetting[];
     reverb: NamedSetting[];
   }>({
     bass: [
-      { name: "gain", value: 6, readableName: "Gain" },
-      { name: "frequency", value: 100, readableName: "Frequency" },
-      { name: "width", value: 0.7, readableName: "Width" },
+      { name: "gain", readableName: "Gain", value: 6 },
+      { name: "frequency", readableName: "Frequency", value: 100 },
+      { name: "width", readableName: "Width", value: 0.7 },
     ],
     reverb: [
-      { name: "wetGain", value: 0, readableName: "Wet Gain" },
-      { name: "reverberance", value: 60, readableName: "Reverberance" },
-      { name: "hfDamping", value: 60, readableName: "HF Damping" },
-      { name: "roomScale", value: 80, readableName: "Room Scale" },
-      { name: "stereoDepth", value: 100, readableName: "Stereo Depth" },
-      { name: "preDelay", value: 25, readableName: "Pre Delay" },
+      { name: "wetGain", readableName: "Wet Gain", value: 0 },
+      { name: "reverberance", readableName: "Reverberance", value: 60 },
+      { name: "hfDamping", readableName: "HF Damping", value: 60 },
+      { name: "roomScale", readableName: "Room Scale", value: 80 },
+      { name: "stereoDepth", readableName: "Stereo Depth", value: 100 },
+      { name: "preDelay", readableName: "Pre Delay", value: 25 },
     ],
   });
 
-  // called when user clicks the dropzone
-  function handleDropZoneClick(): void {}
+  // helper – adjust chosen parameter by +step or -step
+  function adjustSetting(
+    section: "bass" | "reverb",
+    settingName: string,
+    delta: 1 | -1
+  ) {
+    setSoxSettings((prev) => ({
+      ...prev,
+      [section]: prev[section].map((s) =>
+        s.name === settingName
+          ? {
+              ...s,
+              value: parseFloat(
+                (s.value + STEP_SIZES[settingName] * delta).toFixed(2)
+              ),
+            }
+          : s
+      ),
+    }));
+  }
 
   // called when user drops a file
   function handleDrop(droppedFile: File): void {
@@ -42,14 +74,12 @@ export default function App() {
     setFile(droppedFile);
   }
 
-  // called when user hits submit
   function handleSubmitClick(): void {
-    console.log("submitting audio");
+    console.log("submitting audio", soxSettings);
   }
 
-  function handleSettingsClick(): void {
-    console.log("settings opened");
-    setSettingsOpen(true);
+  function handleDropZoneClick(): void {
+    console.log("opening file picker");
   }
 
   const dropzoneContentInitial = (
@@ -59,7 +89,6 @@ export default function App() {
     </div>
   );
 
-  // derive the “file selected” UI directly
   const dropzoneContent = file ? (
     <div>
       <p className="max-w-64">{file.name}</p>
@@ -69,59 +98,59 @@ export default function App() {
     dropzoneContentInitial
   );
 
-  // settings UI now maps over both arrays
   const settingsContent = (
-    <div className="w-24 flex flex-col gap-2">
-      <p className="font-jetbrains-mono text-sm font-medium">BASS</p>
+    <div className="w-56 flex flex-col gap-2">
+      {/* bass */}
+      <div className="font-jetbrains-mono text-sm font-medium mb-1 w-full inline-flex justify-between">
+        <p>BASS</p>
+        <p
+          className="ml-auto mr-0.5 text-blue-600/75 hover:text-blue-600"
+          onClick={(e) => {
+            e.stopPropagation();
+            setSettingsOpen(false);
+          }}
+        >
+          DONE
+        </p>
+      </div>
       <div className="text-sm space-y-2 font-geist-mono font-medium">
         {soxSettings.bass.map((item) => (
           <div
             key={item.name}
             className="flex items-center gap-2 w-full justify-evenly"
           >
-            <button
-              onClick={() => {
-                /* decrement logic */
-              }}
-            >
+            <p className="opacity-60 mr-auto">{item.readableName}</p>
+            <button onClick={() => adjustSetting("bass", item.name, -1)}>
               –
             </button>
-            <div className="w-full grid place-content-center">
+            <div className="w-12 grid place-content-center">
               <NumberFlow value={item.value} />
             </div>
-            <button
-              onClick={() => {
-                /* increment logic */
-              }}
-            >
+            <button onClick={() => adjustSetting("bass", item.name, 1)}>
               +
             </button>
           </div>
         ))}
       </div>
 
-      <p className="font-jetbrains-mono text-sm font-medium mt-3">REVERB</p>
+      {/* reverb */}
+      <p className="font-jetbrains-mono text-sm font-medium mt-3 mb-1">
+        REVERB
+      </p>
       <div className="text-sm space-y-2 font-geist-mono font-medium">
         {soxSettings.reverb.map((item) => (
           <div
             key={item.name}
             className="flex items-center gap-2 w-full justify-evenly"
           >
-            <button
-              onClick={() => {
-                /* decrement logic */
-              }}
-            >
+            <p className="opacity-60 mr-auto">{item.readableName}</p>
+            <button onClick={() => adjustSetting("reverb", item.name, -1)}>
               –
             </button>
-            <div className="w-full grid place-content-center">
-              <NumberFlow value={item.value} />
+            <div className="w-12 grid place-content-center">
+              <NumberFlow value={item.value} plugins={[continuous]} />
             </div>
-            <button
-              onClick={() => {
-                /* increment logic */
-              }}
-            >
+            <button onClick={() => adjustSetting("reverb", item.name, 1)}>
               +
             </button>
           </div>
@@ -137,8 +166,8 @@ export default function App() {
       </p>
 
       <DropZone
-        onClick={handleDropZoneClick}
         onDropped={handleDrop}
+        onClick={handleDropZoneClick}
         className="font-jetbrains-mono font-medium px-8 py-6 max-w-72 w-fit"
       >
         {dropzoneContent}
@@ -147,13 +176,13 @@ export default function App() {
       <SubmitButton onClick={handleSubmitClick} enabled={file !== null} />
 
       <Settings
-        onClick={handleSettingsClick}
+        onClick={() => setSettingsOpen(true)}
         className="border border-gray-200 p-3 w-fit group mt-auto"
       >
         {settingsOpen ? (
           settingsContent
         ) : (
-          <Cog size={18} className="opacity-50 group-hover:opacity-100" />
+          <Cog size={18} className="opacity-50" />
         )}
       </Settings>
     </main>
