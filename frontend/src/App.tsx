@@ -3,13 +3,12 @@ import DropZone from "./DropZone";
 import SubmitButton from "./SubmitButton";
 import Settings from "./Settings";
 import NumberFlow, { continuous } from "@number-flow/react";
-
 import { Cog } from "lucide-react";
 
 // each setting has a name, displayed label, and numeric value
 type NamedSetting = { name: string; readableName: string; value: number };
 
-// util – how much to change each parameter when +/- is clicked
+// step size for every parameter
 const STEP_SIZES: Record<string, number> = {
   // bass
   gain: 1,
@@ -24,10 +23,18 @@ const STEP_SIZES: Record<string, number> = {
   preDelay: 5,
 };
 
+// util – turns [{name,value}, …] into { name: value, … }
+function listToObject(list: NamedSetting[]): Record<string, number> {
+  return list.reduce<Record<string, number>>((acc, s) => {
+    acc[s.name] = s.value;
+    return acc;
+  }, {});
+}
+
 export default function App() {
   const [file, setFile] = useState<File | null>(null);
-  const [settingsOpen, setSettingsOpen] = useState<boolean>(false);
-
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [soxSettings, setSoxSettings] = useState<{
     bass: NamedSetting[];
     reverb: NamedSetting[];
@@ -47,7 +54,7 @@ export default function App() {
     ],
   });
 
-  // helper – adjust chosen parameter by +step or -step
+  // mutate chosen parameter by ±step
   function adjustSetting(
     section: "bass" | "reverb",
     settingName: string,
@@ -68,17 +75,46 @@ export default function App() {
     }));
   }
 
-  // called when user drops a file
-  function handleDrop(droppedFile: File): void {
-    console.log(droppedFile);
-    setFile(droppedFile);
+  async function handleSubmitClick() {
+    if (!file || submitting) return;
+    setSubmitting(true);
+
+    const form = new FormData();
+    form.append("file", file);
+    form.append("bass", JSON.stringify(listToObject(soxSettings.bass)));
+    form.append("reverb", JSON.stringify(listToObject(soxSettings.reverb)));
+
+    try {
+      const res = await fetch("/api/process", { method: "POST", body: form });
+      if (!res.ok)
+        throw new Error(`server responded ${res.status}: ${res.statusText}`);
+
+      const blob = await res.blob();
+      // filename comes from content‑disposition or fallback
+      let filename =
+        "output_modified" + file.name.substring(file.name.lastIndexOf("."));
+      const cd = res.headers.get("content-disposition");
+      if (cd && cd.includes("filename=")) {
+        filename = cd.split("filename=")[1].replace(/[";]/g, "");
+      }
+
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error(err);
+      alert("error processing audio – see console for details");
+    } finally {
+      setSubmitting(false);
+    }
   }
 
-  function handleSubmitClick(): void {
-    console.log("submitting audio", soxSettings);
-  }
-
-  function handleDropZoneClick(): void {
+  function handleDropZoneClick() {
     console.log("opening file picker");
   }
 
@@ -166,14 +202,17 @@ export default function App() {
       </p>
 
       <DropZone
-        onDropped={handleDrop}
+        onDropped={(f) => setFile(f)}
         onClick={handleDropZoneClick}
         className="font-jetbrains-mono font-medium px-8 py-6 max-w-72 w-fit"
       >
         {dropzoneContent}
       </DropZone>
 
-      <SubmitButton onClick={handleSubmitClick} enabled={file !== null} />
+      <SubmitButton
+        onClick={handleSubmitClick}
+        enabled={file !== null && !submitting}
+      />
 
       <Settings
         onClick={() => setSettingsOpen(true)}
