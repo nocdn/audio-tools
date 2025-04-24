@@ -85,7 +85,10 @@ export default function App() {
     form.append("reverb", JSON.stringify(listToObject(soxSettings.reverb)));
 
     try {
-      const res = await fetch("/api/process", { method: "POST", body: form });
+      const res = await fetch("/api/process", {
+        method: "POST",
+        body: form,
+      });
       if (!res.ok)
         throw new Error(`server responded ${res.status}: ${res.statusText}`);
 

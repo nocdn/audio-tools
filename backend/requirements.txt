@@ -1,3 +1,4 @@
 Flask
 Flask-Limiter
 python-dotenv
+Flask-CORS
