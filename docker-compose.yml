@@ -1,0 +1,37 @@
+version: "3.9" # specify docker compose version
+
+services:
+  backend:
+    build:
+      context: ./backend # path to the backend Dockerfile directory
+    container_name: audio-tools-backend # optional: give the container a specific name
+    ports:
+      # map host port 5030 to container port 5030 (or use ${PORT} if defined in .env)
+      - "5030:5030"
+    env_file:
+      # load environment variables from .env file in the backend directory
+      - ./backend/.env
+    restart: unless-stopped # restart policy
+    healthcheck:
+      # check if the backend is healthy using the /api/health endpoint
+      test: ["CMD-SHELL", "curl -f http://localhost:5030/api/health || exit 1"]
+      interval: 30s # time between checks
+      timeout: 10s # max time to wait for response
+      retries: 3 # number of attempts before marking as unhealthy
+      start_period: 15s # grace period after container starts
+
+  frontend:
+    build:
+      context: ./frontend # path to the frontend Dockerfile directory
+    container_name: audio-tools-frontend # optional: give the container a specific name
+    ports:
+      # map host port 5040 to container port 5040 (where nginx listens)
+      - "5040:5040"
+    depends_on:
+      backend:
+        condition: service_healthy # wait for the backend to pass its health check
+    restart: unless-stopped # restart policy
+
+# Note: Volumes removed as the backend uses temp dirs and frontend serves static files.
+# Add volumes back if needed for development (e.g., hot-reloading source code)
+# or if the backend needs persistent storage later.

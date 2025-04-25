@@ -1,5 +1,4 @@
 import { motion } from "motion/react";
-import { useState } from "react";
 
 interface SettingsProps {
   children: React.ReactNode;
